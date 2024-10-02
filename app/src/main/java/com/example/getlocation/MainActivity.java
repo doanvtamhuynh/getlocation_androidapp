@@ -1,38 +1,27 @@
 package com.example.getlocation;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.location.LocationListener;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.location.LocationRequest;
 import android.os.Bundle;
-
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.material.snackbar.Snackbar;
-
+import com.google.android.gms.location.FusedLocationProviderClient;
 import androidx.appcompat.app.AppCompatActivity;
-
+import com.google.android.gms.location.LocationServices;
 import android.provider.Settings;
 import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.core.app.ActivityCompat;
 import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
 import com.example.getlocation.databinding.ActivityMainBinding;
-
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
+    private FusedLocationProviderClient fusedLocationClient;
 
     TextView txtLocation;
     Button btnGetLocation, btnCheck;
@@ -42,10 +31,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
         txtLocation = findViewById(R.id.txtLocation);
         btnGetLocation = findViewById(R.id.btnGetLocation);
         btnCheck = findViewById(R.id.btnCheck);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         btnCheck.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,6 +43,14 @@ public class MainActivity extends AppCompatActivity {
                 checkGPS();
             }
         });
+
+        btnGetLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getLastKnownLocation();
+            }
+        });
+
     }
 
     private boolean checkGPS(){
@@ -60,7 +58,31 @@ public class MainActivity extends AppCompatActivity {
 
         if (locationManager != null && !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             // GPS chưa bật, hiển thị thông báo
-            Toast.makeText(this, "GPS is disabled", Toast.LENGTH_LONG).show();
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Xác nhận") // Tiêu đề của hộp thoại
+                    .setMessage("Chưa bật vị trí bạn có muốn bật không?") // Nội dung thông điệp
+                    .setCancelable(false) // Không cho phép đóng hộp thoại bằng cách nhấn ra ngoài
+                    .setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Hành động khi nhấn "Có"
+                            dialog.dismiss(); // Đóng hộp thoại
+                            enableGPS();
+                        }
+                    })
+                    .setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Hành động khi nhấn "Không"
+                            dialog.dismiss(); // Đóng hộp thoại
+                        }
+                    });
+
+            // Hiển thị hộp thoại
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+
             return false;
         } else {
             // GPS đang bật, thực hiện các thao tác với vị trí
@@ -69,9 +91,51 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void enableGPS(Context context){
+    private void enableGPS(){
         Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        context.startActivity(intent);
+        startActivity(intent);
+    }
+
+    private void getLastKnownLocation() {
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Xác nhận") // Tiêu đề của hộp thoại
+                    .setMessage("Chưa bật vị trí bạn có muốn bật không?") // Nội dung thông điệp
+                    .setCancelable(false) // Không cho phép đóng hộp thoại bằng cách nhấn ra ngoài
+                    .setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Hành động khi nhấn "Có"
+                            dialog.dismiss(); // Đóng hộp thoại
+                            enableGPS();
+                        }
+                    })
+                    .setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Hành động khi nhấn "Không"
+                            dialog.dismiss(); // Đóng hộp thoại
+                        }
+                    });
+
+            // Hiển thị hộp thoại
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+            return;
+        }
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+                        Toast.makeText(MainActivity.this, "Vị trí hiện tại: " + latitude + ", " + longitude, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
 }
