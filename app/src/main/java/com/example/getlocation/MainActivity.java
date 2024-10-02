@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     if (location != null) {
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
-                        Toast.makeText(MainActivity.this, "Vị trí hiện tại: " + latitude + ", " + longitude, Toast.LENGTH_LONG).show();
+                        txtLocation.setText("Vị trí hiện tại: " + latitude + ", " + longitude);
                     } else {
                         Toast.makeText(MainActivity.this, "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show();
                     }
