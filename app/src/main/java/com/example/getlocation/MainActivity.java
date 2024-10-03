@@ -110,6 +110,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getLastKnownLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        boolean isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (!isLocationEnabled) {
+            Toast.makeText(MainActivity.this, "Vui lòng bật dịch vụ định vị!", Toast.LENGTH_SHORT).show();
+            return; // Thoát khỏi phương thức
+        }
+
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY)
                 .setIntervalMillis(5000L)
                 .setMinUpdateIntervalMillis(2000L)  // Cập nhật vị trí nhanh nhất mỗi 2 giây
@@ -119,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult == null) {
+                    Toast.makeText(MainActivity.this, "Không thể lấy vị trí hiện tại!", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
@@ -129,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             ActivityCompat.requestPermissions(this, new String[]{
                     android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
             return;
