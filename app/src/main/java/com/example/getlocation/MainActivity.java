@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -30,6 +32,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -134,7 +140,17 @@ public class MainActivity extends AppCompatActivity {
                 for (Location location : locationResult.getLocations()) {
                     double latitude = location.getLatitude();
                     double longitude = location.getLongitude();
-                    txtLocation.setText("Vị trí hiện tại: " + latitude + ", " + longitude);
+                    Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                    String countryName = "";
+                    try {
+                        List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                        if (addresses != null && !addresses.isEmpty()) {
+                            countryName = addresses.get(0).getCountryName();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    txtLocation.setText("Vị trí hiện tại: " + latitude + ", " + longitude + "\n" + "Country: " + countryName);
                 }
             }
         };
